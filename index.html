@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POD图管家 — Temu POD 图案图库管理 · 向量去重 · 图形转换</title>
+<meta name="description" content="POD图管家是一款专为 Temu POD 电商从业者打造的桌面应用，提供图库管理、智能向量去重、图形转换、一键入库等功能。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'dark', themeVariables: {
+    primaryColor: '#2a1810', primaryTextColor: '#f5f5f5', primaryBorderColor: '#FF8C42',
+    lineColor: '#FF8C42', secondaryColor: '#1a1a2e', tertiaryColor: '#16213e',
+    fontSize: '13px'
+  }});
+</script>
+<style>
+  :root {
+    --bg-0: #0a0a0d;
+    --bg-1: #111117;
+    --bg-2: #1a1a24;
+    --bg-3: #24243a;
+    --fg-0: #f5f5f5;
+    --fg-1: #c4c4d0;
+    --fg-2: #8a8a9a;
+    --accent-1: #FF8C42;
+    --accent-2: #E63946;
+    --accent-3: #F77F00;
+    --accent-grad: linear-gradient(135deg, #FF8C42 0%, #E63946 100%);
+    --accent-glow: 0 0 40px rgba(255, 140, 66, 0.3);
+    --border: rgba(255, 140, 66, 0.15);
+    --border-strong: rgba(255, 140, 66, 0.35);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-0);
+    color: var(--fg-0);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* 背景装饰 */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 0%, rgba(255,140,66,0.08), transparent 50%),
+      radial-gradient(ellipse 60% 50% at 80% 100%, rgba(230,57,70,0.06), transparent 50%);
+    pointer-events: none; z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(255,140,66,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,140,66,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+    pointer-events: none;
+  }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* Nav */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    backdrop-filter: blur(20px);
+    background: rgba(10,10,13,0.7);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 24px; max-width: 1200px; margin: 0 auto;
+  }
+  .nav-logo {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 700; font-size: 16px; letter-spacing: 0.5px;
+  }
+  .nav-logo-icon {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: var(--accent-grad);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 900; color: white;
+  }
+  .nav-links { display: flex; gap: 28px; align-items: center; }
+  .nav-links a {
+    color: var(--fg-2); text-decoration: none; font-size: 14px; font-weight: 500;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--accent-1); }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 28px; border-radius: 8px;
+    font-size: 15px; font-weight: 600; text-decoration: none;
+    cursor: pointer; border: none; transition: all 0.2s;
+    font-family: inherit;
+  }
+  .btn-primary {
+    background: var(--accent-grad);
+    color: white;
+    box-shadow: 0 4px 20px rgba(255,140,66,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,140,66,0.5); }
+  .btn-secondary {
+    background: transparent;
+    color: var(--fg-0);
+    border: 1px solid var(--border-strong);
+  }
+  .btn-secondary:hover { border-color: var(--accent-1); color: var(--accent-1); }
+  .btn-sm { padding: 8px 18px; font-size: 13px; }
+
+  /* Hero */
+  .hero {
+    padding: 140px 0 100px; text-align: center; position: relative;
+  }
+  .hero-badge {
+    display: inline-block;
+    padding: 6px 16px; border-radius: 100px;
+    background: rgba(255,140,66,0.1); border: 1px solid var(--border-strong);
+    font-size: 12px; font-weight: 500; color: var(--accent-1);
+    margin-bottom: 32px;
+    animation: fadeDown 0.8s ease;
+  }
+  .hero h1 {
+    font-size: clamp(36px, 7vw, 72px);
+    font-weight: 900; letter-spacing: -1px; line-height: 1.1;
+    margin-bottom: 24px;
+    background: linear-gradient(135deg, #fff 0%, #FF8C42 60%, #E63946 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: fadeUp 0.8s ease 0.1s both;
+  }
+  .hero-subtitle {
+    font-size: clamp(16px, 2.5vw, 20px);
+    color: var(--fg-1); max-width: 620px; margin: 0 auto 40px;
+    animation: fadeUp 0.8s ease 0.2s both;
+  }
+  .hero-actions {
+    display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+    animation: fadeUp 0.8s ease 0.3s both;
+  }
+
+  /* Section */
+  section { padding: 100px 0; position: relative; }
+  .section-title {
+    font-size: clamp(28px, 4vw, 42px); font-weight: 900;
+    margin-bottom: 16px; letter-spacing: -0.5px;
+  }
+  .section-title .highlight {
+    background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .section-subtitle {
+    font-size: 16px; color: var(--fg-2); max-width: 600px; margin-bottom: 60px;
+  }
+  .section-header { margin-bottom: 60px; }
+
+  /* Features Grid */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+  }
+  .feature-card {
+    background: linear-gradient(145deg, var(--bg-2), var(--bg-1));
+    border: 1px solid var(--border);
+    border-radius: 16px; padding: 32px;
+    transition: all 0.3s;
+    position: relative; overflow: hidden;
+  }
+  .feature-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--accent-grad); opacity: 0; transition: opacity 0.3s;
+  }
+  .feature-card:hover { border-color: var(--border-strong); transform: translateY(-4px); }
+  .feature-card:hover::before { opacity: 1; }
+  .feature-icon {
+    width: 52px; height: 52px; border-radius: 12px;
+    background: rgba(255,140,66,0.1);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px; color: var(--accent-1); font-size: 26px;
+  }
+  .feature-card h3 {
+    font-size: 18px; font-weight: 700; margin-bottom: 10px;
+  }
+  .feature-card p {
+    font-size: 14px; color: var(--fg-2); line-height: 1.7;
+  }
+  .feature-tags {
+    margin-top: 16px; display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .feature-tag {
+    font-size: 11px; padding: 3px 10px; border-radius: 100px;
+    background: rgba(255,140,66,0.08); color: var(--accent-3);
+    border: 1px solid rgba(255,140,66,0.15);
+  }
+
+  /* Architecture */
+  .arch-wrap {
+    background: var(--bg-1); border: 1px solid var(--border);
+    border-radius: 16px; padding: 40px; overflow-x: auto;
+  }
+  .mermaid { display: flex; justify-content: center; min-width: 700px; }
+
+  /* Highlight strip */
+  .highlights {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+  }
+  .highlight-item {
+    padding: 24px; border-radius: 12px;
+    background: var(--bg-2); border: 1px solid var(--border);
+  }
+  .highlight-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 32px; font-weight: 600;
+    background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+    margin-bottom: 8px;
+  }
+  .highlight-label { font-size: 13px; color: var(--fg-1); }
+
+  /* Tech Stack */
+  .tech-list {
+    display: flex; flex-wrap: wrap; gap: 12px;
+  }
+  .tech-item {
+    padding: 10px 20px; border-radius: 8px;
+    background: var(--bg-2); border: 1px solid var(--border);
+    font-size: 14px; color: var(--fg-1);
+  }
+  .tech-item .ver { color: var(--fg-2); margin-left: 6px; font-size: 12px; }
+
+  /* Download CTA */
+  .cta-section {
+    text-align: center;
+    padding: 120px 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 50% 50%, rgba(255,140,66,0.1), transparent 70%);
+  }
+  .cta-section h2 {
+    font-size: clamp(32px, 5vw, 52px); font-weight: 900;
+    margin-bottom: 16px; letter-spacing: -0.5px;
+  }
+  .cta-section p { color: var(--fg-2); margin-bottom: 40px; }
+
+  /* Footer */
+  footer {
+    padding: 60px 0 30px; border-top: 1px solid var(--border);
+    color: var(--fg-2); font-size: 13px;
+  }
+  .footer-inner {
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
+  }
+  .footer-links { display: flex; gap: 20px; }
+  .footer-links a { color: var(--fg-2); text-decoration: none; }
+  .footer-links a:hover { color: var(--accent-1); }
+
+  /* 占位图 */
+  .screenshot-placeholder {
+    margin-top: 48px; padding: 40px;
+    background: var(--bg-1); border: 2px dashed var(--border-strong);
+    border-radius: 16px; text-align: center;
+  }
+  .screenshot-placeholder .placeholder-icon {
+    font-size: 48px; margin-bottom: 16px; color: var(--accent-1); opacity: 0.6;
+  }
+  .screenshot-placeholder h4 { font-size: 16px; margin-bottom: 8px; color: var(--fg-1); }
+  .screenshot-placeholder p { font-size: 13px; color: var(--fg-2); max-width: 500px; margin: 0 auto; }
+  .placeholder-detail {
+    margin-top: 24px; padding: 16px;
+    background: var(--bg-0); border-radius: 8px;
+    text-align: left; font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--fg-2); line-height: 1.8;
+  }
+  .placeholder-detail .ph-title { color: var(--accent-1); font-weight: 600; }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .reveal {
+    opacity: 0; transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 600px) {
+    .nav-links { display: none; }
+    .hero { padding: 100px 0 60px; }
+    section { padding: 70px 0; }
+    .arch-wrap { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo">
+      <div class="nav-logo-icon">P</div>
+      POD图管家
+    </div>
+    <div class="nav-links">
+      <a href="#features">功能</a>
+      <a href="#architecture">架构</a>
+      <a href="#tech">技术</a>
+      <a href="https://github.com/Le-Fu/pod-tuguajia/issues" target="_blank" rel="noopener">反馈</a>
+      <a href="#download" class="btn btn-primary btn-sm">下载</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badge">⚡ v0.1.4 · macOS 桌面应用</div>
+    <h1>POD图管家</h1>
+    <p class="hero-subtitle">专为 Temu POD 电商从业者打造的一站式图案图库管理工具。向量去重、图形转换、批量入库，全流程本地离线运行。</p>
+    <div class="hero-actions">
+      <a href="#download" class="btn btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        立即下载
+      </a>
+      <a href="https://github.com/Le-Fu/pod-tuguajia" target="_blank" rel="noopener" class="btn btn-secondary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.21.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5 1 .11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.17 0 0 1.01-.32 3.3 1.23.96-.27 1.98-.4 3-.4s2.04.13 3 .4c2.29-1.55 3.3-1.23 3.3-1.23.66 1.65.24 2.87.12 3.17.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.49 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.82.58C20.57 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        GitHub
+      </a>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features">
+    <div class="section-header">
+      <h2 class="section-title">四大核心<span class="highlight">功能模块</span></h2>
+      <p class="section-subtitle">模块独立、零耦合。按需使用，无需配置即可运行。</p>
+    </div>
+    <div class="features-grid">
+
+      <div class="feature-card reveal">
+        <div class="feature-icon">🗂️</div>
+        <h3>智能图库管理</h3>
+        <p>店铺 → 品类 → 标签 → 图片四级层级导航，面包屑跳级切换。支持封面托管、元信息编辑、批量操作。</p>
+        <div class="feature-tags">
+          <span class="feature-tag">虚拟滚动</span>
+          <span class="feature-tag">封面托管</span>
+          <span class="feature-tag">同步盘点</span>
+        </div>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon">📥</div>
+        <h3>一键入库归档</h3>
+        <p>自动命名、哈希去重、向量入库，命名可逆解析。序号严格单向递增，事务保证原子性。</p>
+        <div class="feature-tags">
+          <span class="feature-tag">自动命名</span>
+          <span class="feature-tag">向量嵌入</span>
+          <span class="feature-tag">崩溃续传</span>
+        </div>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon">🔍</div>
+        <h3>向量智能去重</h3>
+        <p>基于 CLIP ViT-B/32 的 512 维余弦相似度检索，裁剪/旋转/变色仍能识别。硬拦截 + 灰区人工审核。</p>
+        <div class="feature-tags">
+          <span class="feature-tag">本地 ONNX</span>
+          <span class="feature-tag">规则引擎</span>
+          <span class="feature-tag">自去重</span>
+        </div>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon">🎨</div>
+        <h3>批量图形转换</h3>
+        <p>Konva 画板批量变换，代理图预览 + Worker 原图导出分离架构，50 张同屏不爆内存。</p>
+        <div class="feature-tags">
+          <span class="feature-tag">Canvas 画板</span>
+          <span class="feature-tag">批量对齐</span>
+          <span class="feature-tag">Worker 导出</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 占位图说明 -->
+    <div class="screenshot-placeholder reveal">
+      <div class="placeholder-icon">🖼️</div>
+      <h4>应用截图占位符</h4>
+      <p>以下位置预留了应用界面截图，待正式发布前补充。截图将展示主界面、图库模块、去重审核面板、图形转换画板等核心界面。</p>
+      <div class="placeholder-detail">
+        <span class="ph-title">[截图占位说明]</span><br>
+        位置：功能模块展示区下方<br>
+        尺寸建议：1440 × 900（macOS 标准窗口截图）<br>
+        格式要求：PNG 无损，带窗口阴影<br>
+        内容清单：<br>
+        &nbsp;&nbsp;① 主界面侧边导航 + 图库网格<br>
+        &nbsp;&nbsp;② 去重模块并排审核对比<br>
+        &nbsp;&nbsp;③ 图形转换画板（含 Transform 手柄）<br>
+        &nbsp;&nbsp;④ 设置面板（嵌入模型配置）
+      </div>
+    </div>
+  </section>
+
+  <!-- Architecture -->
+  <section id="architecture">
+    <div class="section-header">
+      <h2 class="section-title">模块化<span class="highlight">四层架构</span></h2>
+      <p class="section-subtitle">主进程分层解耦 + 渲染进程模块注册表，新增功能只需注册不改已有。</p>
+    </div>
+    <div class="arch-wrap reveal">
+      <pre class="mermaid">
+flowchart TB
+    subgraph "L4 业务模块层 (modules/)"
+        direction LR
+        Gallery["gallery"]
+        Import["import"]
+        Dedupe["dedupe"]
+        Convert["convert"]
+        SuperRes["superres"]
+        RemoveBG["removebg"]
+        Compress["compress"]
+    end
+    subgraph "L3 能力服务层 (services/)"
+        Embedding["EmbeddingService"]
+        Vector["VectorService"]
+        Thumb["ThumbnailService"]
+        Proxy["ProxyService"]
+        Sync["SyncService"]
+        Task["TaskManager"]
+    end
+    subgraph "L2 内核服务层 (services/)"
+        Db["DbService"]
+        Naming["NamingService"]
+        Seq["SeqService"]
+        Hash["HashService"]
+        FsGuard["FsGuardService"]
+        Settings["SettingsService"]
+    end
+    subgraph "L1 基础设施"
+        direction LR
+        SQLite["better-sqlite3"]
+        VecExt["sqlite-vec"]
+        ONNX["onnxruntime"]
+        Sharp["sharp"]
+        Worker["worker_threads"]
+    end
+    L4 --> L3 --> L2 --> L1
+    style L4 fill:#2a1810,stroke:#FF8C42,stroke-width:2px
+    style L3 fill:#1a1a2e,stroke:#F77F00,stroke-width:1.5px
+    style L2 fill:#16213e,stroke:#E63946,stroke-width:1px
+    style L1 fill:#0d0d14,stroke:#666,stroke-width:1px
+      </pre>
+    </div>
+  </section>
+
+  <!-- Highlights -->
+  <section>
+    <div class="section-header">
+      <h2 class="section-title">为什么选择<span class="highlight">POD图管家</span></h2>
+    </div>
+    <div class="highlights">
+      <div class="highlight-item reveal">
+        <div class="highlight-num">10,000+</div>
+        <div class="highlight-label">单图库容量（向量检索毫秒级）</div>
+      </div>
+      <div class="highlight-item reveal">
+        <div class="highlight-num">512D</div>
+        <div class="highlight-label">CLIP 嵌入向量维度</div>
+      </div>
+      <div class="highlight-item reveal">
+        <div class="highlight-num">≤ 3s</div>
+        <div class="highlight-label">冷启动时间</div>
+      </div>
+      <div class="highlight-item reveal">
+        <div class="highlight-num">100%</div>
+        <div class="highlight-label">离线可用 · 数据存本地</div>
+      </div>
+      <div class="highlight-item reveal">
+        <div class="highlight-num">≤ 800MB</div>
+        <div class="highlight-label">正常使用内存（Proxy 代理图策略）</div>
+      </div>
+      <div class="highlight-item reveal">
+        <div class="highlight-num">v0.1.4</div>
+        <div class="highlight-label">当前版本 · 持续迭代</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tech Stack -->
+  <section id="tech">
+    <div class="section-header">
+      <h2 class="section-title">技术<span class="highlight">选型</span></h2>
+      <p class="section-subtitle">每个选择都有理由，不盲目追新。</p>
+    </div>
+    <div class="tech-list reveal">
+      <div class="tech-item">Electron <span class="ver">31+</span></div>
+      <div class="tech-item">React <span class="ver">18.x</span></div>
+      <div class="tech-item">TypeScript <span class="ver">5.x</span></div>
+      <div class="tech-item">Tailwind CSS <span class="ver">3.x</span></div>
+      <div class="tech-item">Zustand <span class="ver">4.x</span></div>
+      <div class="tech-item">SQLite <span class="ver">better-sqlite3 11</span></div>
+      <div class="tech-item">sqlite-vec <span class="ver">0.1.x</span></div>
+      <div class="tech-item">ONNX Runtime <span class="ver">1.19</span></div>
+      <div class="tech-item">sharp <span class="ver">0.33</span></div>
+      <div class="tech-item">Konva <span class="ver">9.x</span></div>
+      <div class="tech-item">electron-builder <span class="ver">24.x</span></div>
+      <div class="tech-item">pnpm <span class="ver">9.x</span></div>
+    </div>
+  </section>
+
+  <!-- Download CTA -->
+  <section id="download" class="cta-section">
+    <h2>开始你的<span class="highlight">高效创作</span></h2>
+    <p>下载 POD图管家，让图库管理从此不再混乱</p>
+    <div class="hero-actions">
+      <a href="https://github.com/Le-Fu/pod-tuguajia/releases/latest" target="_blank" rel="noopener" class="btn btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        下载 macOS 版
+      </a>
+      <a href="https://github.com/Le-Fu/pod-tuguajia/issues" target="_blank" rel="noopener" class="btn btn-secondary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        反馈问题
+      </a>
+    </div>
+    <p style="margin-top: 24px; font-size: 13px;">macOS 11+ · Intel & Apple Silicon · 约 180MB</p>
+  </section>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div>© 2026 POD图管家 · simon</div>
+      <div class="footer-links">
+        <a href="https://github.com/Le-Fu/pod-tuguajia" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/Le-Fu/pod-tuguajia/issues" target="_blank" rel="noopener">问题反馈</a>
+        <a href="https://github.com/Le-Fu/pod-tuguajia/releases" target="_blank" rel="noopener">版本历史</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // 滚动淡入动画
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

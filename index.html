@@ -261,25 +261,34 @@
   .footer-links a { color: var(--fg-2); text-decoration: none; }
   .footer-links a:hover { color: var(--accent-1); }
 
-  /* 占位图 */
-  .screenshot-placeholder {
-    margin-top: 48px; padding: 40px;
-    background: var(--bg-1); border: 2px dashed var(--border-strong);
-    border-radius: 16px; text-align: center;
+  /* 应用截图预览：点击截图自身侧边栏的热区切换页面 */
+  .shot-frame {
+    position: relative; margin-top: 48px;
+    aspect-ratio: 16 / 10;
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5), var(--accent-glow);
   }
-  .screenshot-placeholder .placeholder-icon {
-    font-size: 48px; margin-bottom: 16px; color: var(--accent-1); opacity: 0.6;
+  .shot-frame img {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; pointer-events: none; user-select: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
   }
-  .screenshot-placeholder h4 { font-size: 16px; margin-bottom: 8px; color: var(--fg-1); }
-  .screenshot-placeholder p { font-size: 13px; color: var(--fg-2); max-width: 500px; margin: 0 auto; }
-  .placeholder-detail {
-    margin-top: 24px; padding: 16px;
-    background: var(--bg-0); border-radius: 8px;
-    text-align: left; font-size: 12px;
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--fg-2); line-height: 1.8;
+  .shot-frame img.active { opacity: 1; }
+  .shot-hotspot {
+    position: absolute; left: 0;
+    border-radius: 10px; cursor: pointer;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
   }
-  .placeholder-detail .ph-title { color: var(--accent-1); font-weight: 600; }
+  .shot-hotspot:hover {
+    background: rgba(255, 140, 66, 0.14);
+    box-shadow: inset 0 0 0 1px rgba(255, 140, 66, 0.35);
+  }
+  .shot-hotspot:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--accent-1); }
+  .shot-hint { margin-top: 14px; text-align: center; font-size: 13px; color: var(--fg-2); }
+  .shot-hint .mono { color: var(--accent-1); }
 
   /* Animations */
   @keyframes fadeUp {
@@ -301,6 +310,7 @@
     .hero { padding: 100px 0 60px; }
     section { padding: 70px 0; }
     .arch-wrap { padding: 20px; }
+    .shot-frame { margin-top: 32px; border-radius: 8px; }
   }
 </style>
 </head>
@@ -394,23 +404,9 @@
 
     </div>
 
-    <!-- 占位图说明 -->
-    <div class="screenshot-placeholder reveal">
-      <div class="placeholder-icon">🖼️</div>
-      <h4>应用截图占位符</h4>
-      <p>以下位置预留了应用界面截图，待正式发布前补充。截图将展示主界面、图库模块、去重审核面板、图形转换画板等核心界面。</p>
-      <div class="placeholder-detail">
-        <span class="ph-title">[截图占位说明]</span><br>
-        位置：功能模块展示区下方<br>
-        尺寸建议：1440 × 900（macOS 标准窗口截图）<br>
-        格式要求：PNG 无损，带窗口阴影<br>
-        内容清单：<br>
-        &nbsp;&nbsp;① 主界面侧边导航 + 图库网格<br>
-        &nbsp;&nbsp;② 去重模块并排审核对比<br>
-        &nbsp;&nbsp;③ 图形转换画板（含 Transform 手柄）<br>
-        &nbsp;&nbsp;④ 设置面板（嵌入模型配置）
-      </div>
-    </div>
+    <!-- 应用截图预览 -->
+    <div class="shot-frame reveal" id="shotFrame" aria-label="应用界面预览，点击截图左侧模块切换页面"></div>
+    <p class="shot-hint reveal">💡 移动到截图左侧的模块栏上会高亮，<span class="mono">点击即可像切换页面一样预览对应模块</span></p>
   </section>
 
   <!-- Architecture -->
@@ -562,6 +558,47 @@ flowchart TB
     });
   }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
   document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // 应用截图轮播：热区坐标基于 3360×2100 截图实测（侧边栏 7 个模块行，行距 80px）
+  (function () {
+    const SHOTS = ['图库', '入库', '去重', '变形', '超分', '压缩', '抠图'];
+    const HOT = { width: 12.5, top: 5.024, pitch: 3.8095, height: 3.4286 };
+    const frame = document.getElementById('shotFrame');
+
+    const imgs = SHOTS.map((name, i) => {
+      const img = new Image();
+      img.src = `assets/${name}.png`;
+      img.alt = `POD图管家「${name}」模块界面`;
+      img.draggable = false;
+      if (i === 0) img.classList.add('active');
+      frame.appendChild(img);
+      return img;
+    });
+
+    let cur = 0;
+    function switchTo(i) {
+      if (i === cur) return;
+      imgs[cur].classList.remove('active');
+      imgs[i].classList.add('active');
+      cur = i;
+    }
+
+    SHOTS.forEach((name, i) => {
+      const hs = document.createElement('div');
+      hs.className = 'shot-hotspot';
+      hs.style.top = (HOT.top + i * HOT.pitch) + '%';
+      hs.style.width = HOT.width + '%';
+      hs.style.height = HOT.height + '%';
+      hs.tabIndex = 0;
+      hs.setAttribute('role', 'button');
+      hs.setAttribute('aria-label', `切换到「${name}」页面`);
+      hs.addEventListener('click', () => switchTo(i));
+      hs.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); switchTo(i); }
+      });
+      frame.appendChild(hs);
+    });
+  })();
 </script>
 </body>
 </html>

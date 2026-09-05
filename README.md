@@ -277,4 +277,4 @@ A：到 [Issues](https://github.com/Le-Fu/pod-tuguajia/issues) 反馈，并可�
 
 ---
 
-*本手册随版本持续更新，当前对应版本 v0.1.6。*
+*本手册随版本持续更新，当前对应版本 v0.1.7。*

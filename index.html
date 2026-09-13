@@ -336,7 +336,7 @@
 <div class="container">
   <!-- Hero -->
   <section class="hero">
-    <div class="hero-badge">⚡ v0.2.0 · macOS 桌面应用</div>
+    <div class="hero-badge">⚡ v0.2.1 · macOS / Windows 双平台</div>
     <h1>POD图管家</h1>
     <p class="hero-subtitle">专为 Temu POD 电商从业者打造的一站式图案图库管理工具。向量去重、图形转换、批量入库，全流程本地离线运行。</p>
     <div class="hero-actions">
@@ -366,9 +366,10 @@
       <div class="feature-card reveal">
         <div class="feature-icon">🗂️</div>
         <h3>智能图库管理</h3>
-        <p>店铺 → 品类 → 标签 → 图片四级层级导航，面包屑跳级切换。支持封面托管、元信息编辑、批量操作。</p>
+        <p>店铺 → 品类 → 标签 → 图片四级层级导航，面包屑跳级切换。支持封面托管、元信息编辑、批量操作，还能上传一张图按视觉相似度搜图。</p>
         <div class="feature-tags">
           <span class="feature-tag">虚拟滚动</span>
+          <span class="feature-tag">以图搜图</span>
           <span class="feature-tag">封面托管</span>
           <span class="feature-tag">同步盘点</span>
         </div>
@@ -402,6 +403,7 @@
         <p>Canvas 画板批量裁剪/旋转/对齐/缩放/换底，选店铺品类自动套用预设尺寸；代理图预览 + Worker 原图导出，50 张同屏不卡。</p>
         <div class="feature-tags">
           <span class="feature-tag">画板所见即所得</span>
+          <span class="feature-tag">吸附辅助线</span>
           <span class="feature-tag">预设尺寸</span>
           <span class="feature-tag">PNG/JPG 导出</span>
         </div>
@@ -526,8 +528,8 @@ flowchart TB
         <div class="highlight-label">正常使用内存（Proxy 代理图策略）</div>
       </div>
       <div class="highlight-item reveal">
-        <div class="highlight-num">v0.2.0</div>
-        <div class="highlight-label">当前版本 · 持续迭代</div>
+        <div class="highlight-num">v0.2.1</div>
+        <div class="highlight-label">当前版本 · macOS / Windows</div>
       </div>
     </div>
   </section>
@@ -560,15 +562,20 @@ flowchart TB
     <p>下载 POD图管家，让图库管理从此不再混乱</p>
     <div class="hero-actions">
       <a href="https://github.com/Le-Fu/pod-tuguajia/releases/latest" target="_blank" rel="noopener" class="btn btn-primary">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
         下载 macOS 版
+      </a>
+      <a href="https://github.com/Le-Fu/pod-tuguajia/releases/latest" target="_blank" rel="noopener" class="btn btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5L10 4.3V11.5H3V5.5ZM10 12.8V20L3 18.8V12.8H10ZM11.3 4.1L21 3V11.5H11.3V4.1ZM21 12.8V21L11.3 19.9V12.8H21Z"/></svg>
+        下载 Windows 版
       </a>
       <a href="https://github.com/Le-Fu/pod-tuguajia/issues" target="_blank" rel="noopener" class="btn btn-secondary">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
         反馈问题
       </a>
     </div>
-    <p style="margin-top: 24px; font-size: 13px;">macOS 11+ · Intel & Apple Silicon · 约 180MB</p>
+    <p style="margin-top: 24px; font-size: 13px;">macOS 10.15+（Intel / Apple Silicon）· Windows 10/11 64 位 · 安装包约 180MB</p>
+    <p style="margin-top: 8px; font-size: 12px; color: var(--fg-2);">应用未做代码签名：macOS 首次请右键 → 打开；Windows 弹出 SmartScreen 时选「更多信息 → 仍要运行」。详见<a href="https://github.com/Le-Fu/pod-tuguajia#readme" target="_blank" rel="noopener" style="color:var(--accent-1);">使用手册</a></p>
   </section>
 </div>
 

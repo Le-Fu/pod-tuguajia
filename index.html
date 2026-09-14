@@ -8,6 +8,31 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+<!-- ============================================================
+  GA4（海外 / 翻墙用户有效，GFW 阻断直连上报）
+============================================================ -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1K5S69XN6C"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments); }
+  gtag('js', new Date());
+  gtag('config', 'G-1K5S69XN6C', { send_page_view: true });
+</script>
+
+<!-- ============================================================
+  百度统计（国内直连主用，覆盖国内 macOS 用户）
+============================================================ -->
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?f4791210c7289a9c9d899819e0a37d7e";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 <script type="module">
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
   mermaid.initialize({ startOnLoad: true, theme: 'dark', themeVariables: {
@@ -644,6 +669,49 @@ flowchart TB
       });
       frame.appendChild(hs);
     });
+  })();
+</script>
+
+<!-- ============================================================
+  下载点击埋点（GA4 自定义事件 cta_click）
+  事件参数：
+    cta_name         - 固定 'download'
+    cta_text         - 按钮可见文本
+    cta_location     - 按钮所在区域: nav / hero / cta_section
+    cta_destination  - 目标链接 href
+    cta_type         - anchor_scroll (页内 #download) / releases_redirect (GitHub Releases)
+============================================================ -->
+<script>
+  (function() {
+    function trackDownloadClick(e) {
+      var link = e.target.closest && e.target.closest('a');
+      if (!link) return;
+      var href = link.getAttribute('href') || '';
+      var isAnchorDownload = href.indexOf('#download') !== -1;
+      var isReleaseRedirect = href.indexOf('/releases/') !== -1;
+      if (!isAnchorDownload && !isReleaseRedirect) return;
+      if (typeof gtag !== 'function') return;
+
+      var location = 'unknown';
+      if (link.closest('nav')) location = 'nav';
+      else if (link.closest('.cta-section')) location = 'cta_section';
+      else if (link.closest('.hero')) location = 'hero';
+
+      gtag('event', 'cta_click', {
+        cta_name: 'download',
+        cta_text: (link.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 50),
+        cta_location: location,
+        cta_destination: href,
+        cta_type: isReleaseRedirect ? 'releases_redirect' : 'anchor_scroll'
+      });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function() {
+        document.body.addEventListener('click', trackDownloadClick);
+      });
+    } else {
+      document.body.addEventListener('click', trackDownloadClick);
+    }
   })();
 </script>
 </body>

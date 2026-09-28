@@ -361,7 +361,7 @@
 <div class="container">
   <!-- Hero -->
   <section class="hero">
-    <div class="hero-badge">⚡ v0.2.3 · macOS / Windows 双平台</div>
+    <div class="hero-badge">⚡ v0.3.0 · macOS / Windows 双平台</div>
     <h1>POD图管家</h1>
     <p class="hero-subtitle">专为 Temu POD 电商从业者打造的一站式图案图库管理工具。向量去重、图形转换、批量入库，全流程本地离线运行。</p>
     <div class="hero-actions">
@@ -383,19 +383,20 @@
   <!-- Features -->
   <section id="features">
     <div class="section-header">
-      <h2 class="section-title">七大<span class="highlight">功能模块</span></h2>
-      <p class="section-subtitle">模块独立、零耦合，按「去重 → 处理 → 入库 → 浏览」的工作流排布。<a href="https://github.com/Le-Fu/pod-tuguajia#readme" target="_blank" rel="noopener" style="color:var(--accent-1);font-weight:600;">📖 查看《用户使用手册》→</a></p>
+      <h2 class="section-title">十大<span class="highlight">功能模块</span></h2>
+      <p class="section-subtitle">模块独立、零耦合，按「素材清理 → 图片加工 → 归档编货号」的卖家工作流排布。<a href="https://github.com/Le-Fu/pod-tuguajia#readme" target="_blank" rel="noopener" style="color:var(--accent-1);font-weight:600;">📖 查看《用户使用手册》→</a></p>
     </div>
     <div class="features-grid">
 
       <div class="feature-card reveal">
         <div class="feature-icon">🗂️</div>
         <h3>智能图库管理</h3>
-        <p>店铺 → 品类 → 标签 → 图片四级层级导航，面包屑跳级切换。支持封面托管、元信息编辑、批量操作，还能上传一张图按视觉相似度搜图。</p>
+        <p>店铺 → 品类 → 标签 → 图片四级层级导航，面包屑跳级切换。支持封面托管、元信息编辑、批量操作、按视觉相似度以图搜图，跨店复用不复制文件不重复占空间。</p>
         <div class="feature-tags">
           <span class="feature-tag">虚拟滚动</span>
           <span class="feature-tag">以图搜图</span>
           <span class="feature-tag">封面托管</span>
+          <span class="feature-tag">跨店复用</span>
           <span class="feature-tag">同步盘点</span>
         </div>
       </div>
@@ -464,6 +465,39 @@
           <span class="feature-tag">本地 U2Net</span>
           <span class="feature-tag">透明 PNG</span>
           <span class="feature-tag">单张精修</span>
+        </div>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon">🧭</div>
+        <h3>工作台</h3>
+        <p>按 POD 卖家工作流（素材清理 → 图片加工 → 归档编货号）组织任务入口，进行中的任务一键直达；空库提供三步引导与示例数据，零教程上手。</p>
+        <div class="feature-tags">
+          <span class="feature-tag">工作流导航</span>
+          <span class="feature-tag">任务直达</span>
+          <span class="feature-tag">三步引导</span>
+        </div>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon">🛡️</div>
+        <h3>侵权自检（风险库）</h3>
+        <p>sha256 / pHash / CLIP / 文件名关键词四路比对，可选阿里云内容安全云端复核；结论分级 + 人工复核三态，只标记不拦截。支持第三方检测 JSON、Temu 违规 JSON、图片文件夹三种导入。</p>
+        <div class="feature-tags">
+          <span class="feature-tag">四路比对</span>
+          <span class="feature-tag">云端复核</span>
+          <span class="feature-tag">风险库导入</span>
+        </div>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon">🏷️</div>
+        <h3>标签管理</h3>
+        <p>全局平铺、多对多、与分组解耦：一处创建全局可用。支持手动打标与 CLIP 零样本 AI 打标（本地离线），配合图库筛选条精准圈图。</p>
+        <div class="feature-tags">
+          <span class="feature-tag">全局标签</span>
+          <span class="feature-tag">AI 打标</span>
+          <span class="feature-tag">多对多</span>
         </div>
       </div>
 
@@ -553,7 +587,7 @@ flowchart TB
         <div class="highlight-label">正常使用内存（Proxy 代理图策略）</div>
       </div>
       <div class="highlight-item reveal">
-        <div class="highlight-num">v0.2.3</div>
+        <div class="highlight-num">v0.3.0</div>
         <div class="highlight-label">当前版本 · macOS / Windows</div>
       </div>
     </div>
